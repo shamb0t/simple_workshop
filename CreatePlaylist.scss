@@ -1,0 +1,29 @@
+.input_group {
+  width: 40%;
+  margin: 4em auto;
+}
+
+label,
+input {
+  font-size: 1.5em;
+}
+
+input[type=text] {
+  width: 70%;
+  margin: 0.5em 0 1.5em;
+  padding: 1em 0.25em;
+  background: #F5F4EF;
+  border: none;
+  border-bottom: 3px solid darkslategray;
+  border-radius: 5px;
+  transition: all 0.6s ease;
+}
+input[type=text]:focus {
+  outline: none;
+  background: #fff;
+  border-bottom: 3px solid darkcyan;
+}
+input.active {
+  outline: none;
+  background: #fff;
+}
