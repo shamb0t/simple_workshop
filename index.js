@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import ReactDOM from 'react-dom'
 import './index.css'
 import Playlists from './Playlists'
@@ -9,16 +9,26 @@ import { BrowserRouter as Router, Route } from 'react-router-dom'
 // import * as serviceWorker from './serviceWorker';
 
 // ReactDOM.render(<Playlists store={store} />, document.getElementById('root'));
+
 class App extends React.Component{
     async componentDidMount () {
-      const ipfs = await IPFS.create({ repo: './ipfs-repo', EXPERIMENTAL: { pubsub: true }})
+      const ipfs = await IPFS.create({
+        repo: './ipfs-repo',
+        EXPERIMENTAL: { pubsub: true },
+        preload: { "enabled": false },
+        config: {
+          Addresses: {
+            Swarm: ["/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star"]
+          }
+        }
+      })
       await store.connect(ipfs)
     }
 
     render(){
         return(
           <Router>
-              <Route path="/:address" component={(props) => <Playlist {...props} store={store}/> }></Route>
+              <Route path="/orbitdb/:hash/:name" component={(props) => <Playlist {...props} store={store}/> }></Route>
               <Route exact path="/" component={(props) => <Playlists {...props} store={store}/> }/>
           </Router>
         )
