@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react"
 import { observer, Observer } from 'mobx-react'
 import { Link } from 'react-router-dom'
 import DropZone from './DropZone.js'
-
+import ReactPlayer from 'react-player'
+import HlsjsIpfsLoader from 'hlsjs-ipfs-loader'
+import Hls from 'hls.js'
 
 const Playlist = (props) => {
   const [playlist, setPlaylist] = useState(null)
@@ -57,6 +59,22 @@ const Playlist = (props) => {
        }
     }
 
+  async function play (testHash) {
+    Hls.DefaultConfig.loader = HlsjsIpfsLoader;
+    Hls.DefaultConfig.debug = false;
+    if (Hls.isSupported()) {
+      const video = document.getElementById('video');
+      const hls = new Hls();
+      hls.config.ipfs = props.store._ipfs;
+      hls.config.ipfsHash = testHash;
+      hls.loadSource('master.m3u8');
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play();
+      });
+    }
+  }
+
   return (
     <div onDragOver={event => {
             event.preventDefault()
@@ -66,14 +84,12 @@ const Playlist = (props) => {
       <div>{"ID: " + props.store.ipfsId}</div>
       <ul> {
           items.map(song => (
-          <div key={song.hash}>
-            <li>
-              <Link to={`${song.hash}`}>{song.hash}</Link>
-              <button>share</button>
-              <button onClick={() => playlist.del(song.hash)}>delete</button>
-            </li>
-          </div>
-        )
+            <div key={song.hash}>
+              <li>
+              <audio id='video' ><source src={song.payload.value.content} type='audio/mp3'/></audio>
+              </li>
+            </div>
+          )
       )}
       </ul>
     </div>

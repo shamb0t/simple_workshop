@@ -170,17 +170,17 @@ class PlaylistsStore {
     // await feed.access.grant('write', peer)
     // return true
     console.log(address, peer)
-    const channel = await Channel.open(this._ipfs, peer)
-    // Explicitly wait for peers to connect
-    console.log("Channel", channel)
-    await channel.connect()
-    // Send message on the channel
-    const thing = await channel.send('Hello World!')
-    console.log(thing)
-    // Process messages from the other peer
-    channel.on('message', (message) => {
-      console.log('Message from', message.from, message)
-    })
+    // const channel = await Channel.open(this._ipfs, peer)
+    // // Explicitly wait for peers to connect
+    // console.log("Channel", channel)
+    // await channel.connect()
+    // // Send message on the channel
+    // const thing = await channel.send('Hello World!')
+    // console.log(thing)
+    // // Process messages from the other peer
+    // channel.on('message', (message) => {
+    //   console.log('Message from', message.from, message)
+    // })
   }
 }
 
