@@ -85,9 +85,7 @@ const Playlist = (props) => {
       <ul> {
           items.map(song => (
             <div key={song.hash}>
-              <li>
-              <audio id='video' ><source src={song.payload.value.content} type='audio/mp3'/></audio>
-              </li>
+              <li>{song.payload.value.content}</li>
             </div>
           )
       )}
