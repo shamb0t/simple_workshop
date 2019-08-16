@@ -103,8 +103,7 @@ class PlaylistsStore {
     const feed = this.odb.stores[address] || await this.odb.open(address)
     if (feed) {
       const hash = await feed.add(data)
-      const thing = await feed.get(hash)
-      return thing
+      return feed.get(hash)
     }
     return
   }

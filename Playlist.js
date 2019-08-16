@@ -3,15 +3,7 @@ import { observer, Observer } from 'mobx-react'
 import { Link } from 'react-router-dom'
 import ReactPlayer from 'react-player'
 import './styles/Playlist.scss'
-
-function toArrayBuffer (buffer) {
-  const ab = new ArrayBuffer(buffer.length)
-  const view = new Uint8Array(ab)
-  for (let i = 0; i < buffer.length; ++i) {
-    view[i] = buffer[i]
-  }
-  return ab
-}
+import { getDataTransferFiles, toArrayBuffer } from './helper'
 
 const PlayAudio = ({ipfs, hash}) => {
   const [previewContent, setPreviewContent] = useState(null)
@@ -71,9 +63,9 @@ const Playlist = (props) => {
   let mounted = true
   const address = '/orbitdb/' + props.match.params.hash + '/' + props.match.params.name
 
-  useEffect(handleChannelNameChange, [address])
+  useEffect(handlePlaylistNameChange, [address])
 
-  function handleChannelNameChange () {
+  function handlePlaylistNameChange () {
     function load () {
       props.store.joinPlaylist(address).then(playlist => {
         if (mounted) {
@@ -92,23 +84,13 @@ const Playlist = (props) => {
     }
   }
 
+
   async function onDrop (event) {
      event.preventDefault()
      setDragActive(false)
-     const files = []
-     if (event.dataTransfer.items) {
-       for (let i = 0; i < event.dataTransfer.items.length; i++) {
-         const file = event.dataTransfer.items[i]
-         file.kind === 'file' && files.push(file.getAsFile())
-       }
-     } else {
-       for (let i = 0; i < event.dataTransfer.files.length; i++) {
-         files.push(event.dataTransfer.files.item(i))
-       }
-     }
+     const files = getDataTransferFiles(event)
      try {
        const newItems = await store.sendFiles(files, address)
-       // await playlist.load()
        setItems(items.concat(newItems.filter(x => x!== null && x!== undefined)))
      } catch (err) {
        console.log("ERROR", err)
@@ -123,7 +105,7 @@ const Playlist = (props) => {
             !dragActive && setDragActive(true)}
           }
           onDrop={event => onDrop(event)}>
-      <div>{"ID: " + props.store.ipfsId}</div>
+      <div>{"IPFS ID: " + props.store.ipfsId}</div>
       <ul> {
           items.map(song => (
             <div key={song.hash}>
