@@ -8,7 +8,7 @@ import './styles/Playlists.scss'
 const Playlists = (props) =>
   props.store.isOnline ?
     (<div>
-      <div>{"ID: " + props.store.ipfsId}</div>
+      <div>{"IPFS ID: " + props.store.ipfsId}</div>
       <CreatePlaylist store={props.store} />
       <ul className="playlist-items"> {
         props.store.playlists.map(playlist => (

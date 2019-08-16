@@ -10,8 +10,6 @@ class PlaylistsStore {
   constructor() {
     this._ipfs = null
     this.odb = null
-    this._identity = null
-    this._peers = null
   }
 
   async connect(ipfs, options = {}) {
@@ -19,7 +17,6 @@ class PlaylistsStore {
     const { id } = await ipfs.id()
     this.ipfsId = id
     const identity = options.identity || await Identities.createIdentity({ id: 'user' })
-    this._identity = identity
     this.odb = await OrbitDB.createInstance(ipfs, { identity, directory: './odb'})
     this.isOnline = true
   }
@@ -61,34 +58,24 @@ class PlaylistsStore {
     if (!source || (!source.filename && !source.directory)) {
       throw new Error('Filename or directory not specified')
     }
-
-    async function _addToIpfsJs (data) {
-      const result = await this._ipfs.add(Buffer.from(data))
-      const isDirectory = false
-      const hash = result[0].hash
-      return { hash, isDirectory }
-    }
-
     const isBuffer = source.buffer && source.filename
     const name = source.directory
       ? source.directory.split('/').pop()
       : source.filename.split('/').pop()
     const size = source.meta && source.meta.size ? source.meta.size : 0
 
-    let addToIpfs
+    const result = await this._ipfs.add(Buffer.from(source.buffer))
+    const hash = result[0].hash
 
-    addToIpfs = _addToIpfsJs.bind(this, source.buffer)
-
-    const upload = await addToIpfs()
-    console.log("upload", upload)
+    console.log("upload", hash)
 
     // Create a post
     const data = {
-      content: upload.hash,
+      content: hash,
       meta: Object.assign(
         {
-          from: this._identity.id,
-          type: upload.isDirectory ? 'directory' : 'file',
+          from: this.odb.identity.id,
+          type: 'file',
           ts: new Date().getTime()
         },
         { size, name },
