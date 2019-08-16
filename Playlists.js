@@ -3,7 +3,7 @@ import { observer } from 'mobx-react'
 import { Link } from 'react-router-dom'
 import CreatePlaylist from './CreatePlaylist'
 import { Button, Popup } from 'semantic-ui-react';
-import './Playlists.scss'
+import './styles/Playlists.scss'
 
 const Playlists = (props) =>
   props.store.isOnline ?
@@ -12,7 +12,7 @@ const Playlists = (props) =>
       <CreatePlaylist store={props.store} />
       <ul className="playlist-items"> {
         props.store.playlists.map(playlist => (
-          <li>
+          <li key={playlist.address}>
             <Link to={`${playlist.address}`}>{playlist.name}</Link>
             <Popup className='popup' content={
               (<div>

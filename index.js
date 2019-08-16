@@ -1,14 +1,11 @@
-import React, { useState } from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom'
-import './index.css'
 import Playlists from './Playlists'
 import Playlist from './Playlist'
-import store from './PlaylistsStore'
-import IPFS from 'ipfs'
 import { BrowserRouter as Router, Route } from 'react-router-dom'
-// import * as serviceWorker from './serviceWorker';
 
-// ReactDOM.render(<Playlists store={store} />, document.getElementById('root'));
+import IPFS from 'ipfs'
+import store from './PlaylistsStore'
 
 class App extends React.Component{
     async componentDidMount () {

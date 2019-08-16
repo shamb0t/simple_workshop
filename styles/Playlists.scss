@@ -1,5 +1,6 @@
 .playlists {
   ul {
+   list-style: none;
     li {
       button {
         float: right;
@@ -21,17 +22,6 @@
     overflow: hidden;
     z-index: 1001;
 }
-
-// .mm-content {
-//     // position: fixed;
-//     // top: 0;
-//     // left: 0;
-//     // width: 100%;
-//     // height: 100%;
-//     // z-index: 1000;
-//     // overflow: auto;
-//     background: rgba(1, 1, 0, .1);
-// }
 
 .playlist-items {
   width: 100%;

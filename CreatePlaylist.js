@@ -1,5 +1,5 @@
 import React, { Component, useState } from "react";
-import './CreatePlaylist.scss'
+import './styles/CreatePlaylist.scss'
 
 const CreatePlaylist = (props) => {
   const [name, setName] = useState('')

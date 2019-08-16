@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react"
 import { observer, Observer } from 'mobx-react'
 import { Link } from 'react-router-dom'
-import DropZone from './DropZone.js'
 import ReactPlayer from 'react-player'
+import './styles/Playlist.scss'
 
 function toArrayBuffer (buffer) {
   const ab = new ArrayBuffer(buffer.length)
@@ -27,24 +27,24 @@ const PlayAudio = ({ipfs, hash}) => {
     })
   }, [hash])
 
-
-  // const srcUrl = buffer ? window.URL.createObjectURL(blob) : url
   return previewContent ? previewContent : null
 }
 
 function getFileBuffer (ipfs, hash, options = {}) {
   const timeoutError = new Error('Timeout while fetching file')
-  const timeout = options.timeout || 5 * 1000
+  const timeout = options.timeout || 15 * 1000
   return new Promise((resolve, reject) => {
     let timeoutTimer = setTimeout(() => {
       reject(timeoutError)
     }, timeout)
-    const stream = ipfs.catReadableStream(hash)
+
     let array = new Uint8Array(0)
+    const stream = ipfs.catReadableStream(hash)
     stream.on('error', error => {
       clearTimeout(timeoutTimer)
       reject(error)
     })
+
     stream.on('data', chunk => {
       clearTimeout(timeoutTimer)
       const tmp = new Uint8Array(array.length + chunk.length)
@@ -55,17 +55,12 @@ function getFileBuffer (ipfs, hash, options = {}) {
         reject(timeoutError)
       }, timeout)
     })
+
     stream.on('end', () => {
-      console.log("FINITO")
       clearTimeout(timeoutTimer)
       resolve(array)
     })
   })
-}
-
-async function loadFile (hash) {
-  const array = await getFileBuffer(ipfs, hash)
-  return array
 }
 
 const Playlist = (props) => {
@@ -132,7 +127,7 @@ const Playlist = (props) => {
       <ul> {
           items.map(song => (
             <div key={song.hash}>
-              <li><PlayAudio ipfs={props.store._ipfs} hash={song.payload.value.content}/></li>
+              <li><PlayAudio className="plyr" ipfs={props.store._ipfs} hash={song.payload.value.content}/></li>
             </div>
           )
       )}
@@ -159,92 +154,3 @@ const PlaylistView = (props) => {
   )
 }
 export default PlaylistView
-
-// return (
-//    <Observer>
-//      {() =>
-//        store.isOnline ? (
-//          <div className="PlaylistView">
-//
-//            {/* Render the channel */}
-//            <Channel channelName={props.match.params.channel} />
-//          </div>
-//        ) : null
-//      }
-//    </Observer>
-//  )
-
-//
-// const Playlist = ({ store, location }) => {
-//   const [playlist, setPlaylist] = useState(null)
-//   const [items, setItems] = useState([])
-//   const [address, setAddress] = useState(null)
-//   const [dragActive, setDragActive] = useState(false)
-//
-//   async function load () {
-//     const items = await store.openPlaylist(location.pathname)
-//     setItems(items)
-//     setAddress(location.pathname)
-//   }
-//
-//   useEffect(() => {
-//     load()
-//     return () => {
-//     }
-//   }, [{store, location}])
-//
-//   async function onDrop (event) {
-//      event.preventDefault()
-//      setDragActive(false)
-//      const files = []
-//      if (event.dataTransfer.items) {
-//        for (let i = 0; i < event.dataTransfer.items.length; i++) {
-//          const file = event.dataTransfer.items[i]
-//          file.kind === 'file' && files.push(file.getAsFile())
-//        }
-//      } else {
-//        for (let i = 0; i < event.dataTransfer.files.length; i++) {
-//          files.push(event.dataTransfer.files.item(i))
-//        }
-//      }
-//      try {
-//        const newItems = await store.sendFiles(files, address)
-//        setItems(items.concat(newItems.filter(x => x!== null && x!== undefined)))
-//      } catch (err) {
-//        console.log("ERROR", err)
-//        throw err
-//      }
-//   }
-//
-//   const Items = (props) => (
-//     <ul> {
-//       props.store.songs.map(song => (
-//         <div key={song.name}>
-//           <li>
-//             <Link to={`${playlist.name}`}>{song.name}</Link>
-//             <button>share</button>
-//             <button onClick={() => props.store.deletePlaylist(playlist.name)}>delete</button>
-//           </li>
-//         </div>
-//       )
-//     )}
-//     </ul>)
-//
-  // return (
-  //     <div className="header">
-  //       <Link to={`/`}> Back </Link>
-  //       <div onDragOver={event => {
-  //         event.preventDefault()
-  //         !dragActive && setDragActive(true)}
-  //       }
-  //       label={"add files to " + address }
-  //       onDragLeave={() => setDragActive(false)}
-  //       onDrop={event => onDrop(event)}
-  //       style={{height: "10em"}}>
-  //     <Items className="items-list"/>
-  //     </div>
-  //   </div>
-  // )
-// }
-//
-// export default observer(Playlist)
