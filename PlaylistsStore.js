@@ -18,21 +18,21 @@ class PlaylistsStore {
     this.ipfsId = id
     const identity = options.identity || await Identities.createIdentity({ id: 'user' })
     this.odb = await OrbitDB.createInstance(ipfs, { identity, directory: './odb'})
+    await this.load()
+    console.log(this.playlists.all)
     this.isOnline = true
   }
 
-  load(key = 'playlists') {
-    this.playlists = JSON.parse(localStorage.getItem(key)) || []
+  async load(key = 'playlists') {
+    this.playlists = await this.odb.feed(this.odb.identity.id + 'playlists') //JSON.parse(localStorage.getItem(key)) || []
+    await this.playlists.load()
   }
 
-  save(key = 'playlists') {
-    localStorage.setItem(key, JSON.stringify(this.playlists))
-  }
-
-  deletePlaylist(name) {
-    const filtered = this.playlists.filter(x => x.name !== name)
-    this.playlists = filtered
-    this.save()
+  async deletePlaylist(hash) {
+    // const filtered = this.playlists.filter(x => x.name !== name)
+    // this.playlists = filtered
+    // this.save()
+    return this.playlists.del(hash)
   }
 
   async createNewPlaylist(name) {
@@ -42,8 +42,7 @@ class PlaylistsStore {
       address: playlist.address.toString()
     }
 
-    this.playlists.push(p)
-    this.save()
+    this.playlists.add(p)
     return name
   }
 
@@ -143,6 +142,6 @@ class PlaylistsStore {
 
 const store = window.store = new PlaylistsStore
 
-store.load()
+// store.load()
 
 export default store

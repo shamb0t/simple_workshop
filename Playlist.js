@@ -3,7 +3,7 @@ import { observer, Observer } from 'mobx-react'
 import { Link } from 'react-router-dom'
 import ReactPlayer from 'react-player'
 import './styles/Playlist.scss'
-import { getDataTransferFiles, toArrayBuffer } from './helper'
+import { getDataTransferFiles, toArrayBuffer, getFileBuffer } from './helper'
 
 const PlayAudio = ({ipfs, hash}) => {
   const [previewContent, setPreviewContent] = useState(null)
@@ -22,39 +22,6 @@ const PlayAudio = ({ipfs, hash}) => {
   return previewContent ? previewContent : null
 }
 
-function getFileBuffer (ipfs, hash, options = {}) {
-  const timeoutError = new Error('Timeout while fetching file')
-  const timeout = options.timeout || 15 * 1000
-  return new Promise((resolve, reject) => {
-    let timeoutTimer = setTimeout(() => {
-      reject(timeoutError)
-    }, timeout)
-
-    let array = new Uint8Array(0)
-    const stream = ipfs.catReadableStream(hash)
-    stream.on('error', error => {
-      clearTimeout(timeoutTimer)
-      reject(error)
-    })
-
-    stream.on('data', chunk => {
-      clearTimeout(timeoutTimer)
-      const tmp = new Uint8Array(array.length + chunk.length)
-      tmp.set(array)
-      tmp.set(chunk, array.length)
-      array = tmp
-      timeoutTimer = setTimeout(() => {
-        reject(timeoutError)
-      }, timeout)
-    })
-
-    stream.on('end', () => {
-      clearTimeout(timeoutTimer)
-      resolve(array)
-    })
-  })
-}
-
 const Playlist = (props) => {
   const [playlist, setPlaylist] = useState(null)
   const [items, setItems] = useState([])
@@ -70,6 +37,7 @@ const Playlist = (props) => {
       props.store.joinPlaylist(address).then(playlist => {
         if (mounted) {
           setPlaylist(playlist)
+          playlist.events.on('replicate.progress', load)
           setItems(playlist.all)
         }
       })
@@ -80,6 +48,8 @@ const Playlist = (props) => {
     // props.store._ipfs.libp2p.on('peer:connect', load)
     return () => {
       // props.store._ipfs.libp2p.removeListener('peer:connect', load)
+      playlist.events.removeListener('replicate.progress', load)
+      setPlaylist(null)
       mounted = false
     }
   }
@@ -98,22 +68,29 @@ const Playlist = (props) => {
      }
   }
 
-
   return (
-    <div onDragOver={event => {
-            event.preventDefault()
-            !dragActive && setDragActive(true)}
+    <div className='Playlist'>
+      <div className='header'>
+        <Link to={`/`}> Back </Link>
+        <div id='title'>{props.match.params.name}</div>
+        <div id='ipfsId'>{"IPFS ID: " + props.store.ipfsId}</div>
+      </div>
+      <div className='dragZone'
+          onDragOver={event => {
+              event.preventDefault()
+              !dragActive && setDragActive(true)
+            }
           }
           onDrop={event => onDrop(event)}>
-      <div>{"IPFS ID: " + props.store.ipfsId}</div>
-      <ul> {
-          items.map(song => (
-            <div key={song.hash}>
-              <li><PlayAudio className="plyr" ipfs={props.store._ipfs} hash={song.payload.value.content}/></li>
-            </div>
-          )
-      )}
-      </ul>
+          <ul> {
+            items.map(song => (
+                <div key={song.hash}>
+                  <li><PlayAudio className="plyr" ipfs={props.store._ipfs} hash={song.payload.value.content}/></li>
+                </div>
+              )
+          )}
+          </ul>
+      </div>
     </div>
   )
 }
@@ -122,15 +99,7 @@ const PlaylistView = (props) => {
   return (
     <Observer>
     {() =>
-      props.store.isOnline ? (
-        <div className="PlaylistView">
-          <div>
-            <Link to={`/`}> Back </Link>
-            <div>Songs</div>
-          </div>
-          <Playlist {...props} />
-        </div>
-      ) : null
+      props.store.isOnline ? (<Playlist {...props} />) : null
     }
     </Observer>
   )

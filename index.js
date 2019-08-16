@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 import Playlists from './Playlists'
 import Playlist from './Playlist'
 import { BrowserRouter as Router, Route } from 'react-router-dom'
-
+import './styles/index.scss'
 import IPFS from 'ipfs'
 import store from './PlaylistsStore'
 
