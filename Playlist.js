@@ -6,7 +6,7 @@ import './styles/Playlist.scss'
 import { getDataTransferFiles, toArrayBuffer, getFileBuffer } from './helper'
 
 const PlayAudio = ({ipfs, hash}) => {
-  const [previewContent, setPreviewContent] = useState(null)
+  const [content, setContent] = useState(null)
   useEffect (() => {
     getFileBuffer(ipfs, hash).then(buffer => {
       let blob = new Blob([])
@@ -15,16 +15,17 @@ const PlayAudio = ({ipfs, hash}) => {
       } else if (buffer) {
         blob = new Blob([toArrayBuffer(buffer)], { type: 'audio/mpeg' })
       }
-      setPreviewContent(<audio src={window.URL.createObjectURL(blob)} controls autoPlay={false} />)
+      setContent(<audio src={window.URL.createObjectURL(blob)} controls autoPlay={true} />)
     })
   }, [hash])
 
-  return previewContent ? previewContent : null
+  return content ? content : null
 }
 
 const Playlist = (props) => {
   const [playlist, setPlaylist] = useState(null)
-  const [items, setItems] = useState([])
+  const [track, setTrack] = useState(null)
+  // const [items, setItems] = useState([])
   const [dragActive, setDragActive] = useState(false)
 
   let mounted = true
@@ -37,35 +38,38 @@ const Playlist = (props) => {
       props.store.joinPlaylist(address).then(playlist => {
         if (mounted) {
           setPlaylist(playlist)
-          playlist.events.on('replicate.progress', load)
-          setItems(playlist.all)
         }
       })
     }
     load()
 
-    // reload when peer connected
-    // props.store._ipfs.libp2p.on('peer:connect', load)
+    if (playlist) {
+      playlist.events.on('replicate.progress', playlist.load())
+    }
+
     return () => {
-      // props.store._ipfs.libp2p.removeListener('peer:connect', load)
-      playlist.events.removeListener('replicate.progress', load)
       setPlaylist(null)
       mounted = false
     }
   }
-
 
   async function onDrop (event) {
      event.preventDefault()
      setDragActive(false)
      const files = getDataTransferFiles(event)
      try {
-       const newItems = await store.sendFiles(files, address)
-       setItems(items.concat(newItems.filter(x => x!== null && x!== undefined)))
+       await store.sendFiles(files, address)
+       await playlist.load()
      } catch (err) {
        console.log("ERROR", err)
        throw err
      }
+  }
+
+  const PlaylistItem = ({ name, hash }) => {
+    return (
+      <div className='playlist-item' onClick={() => setTrack(hash)}>{name}</div>
+    )
   }
 
   return (
@@ -73,8 +77,8 @@ const Playlist = (props) => {
       <div className='header'>
         <Link to={`/`}> Back </Link>
         <div id='title'>{props.match.params.name}</div>
-        <div id='ipfsId'>{"IPFS ID: " + props.store.ipfsId}</div>
       </div>
+      {track ? (<PlayAudio className="plyr" ipfs={props.store._ipfs} hash={track}/>) : null}
       <div className='dragZone'
           onDragOver={event => {
               event.preventDefault()
@@ -83,11 +87,9 @@ const Playlist = (props) => {
           }
           onDrop={event => onDrop(event)}>
           <ul> {
-            items.map(song => (
-                <div key={song.hash}>
-                  <li><PlayAudio className="plyr" ipfs={props.store._ipfs} hash={song.payload.value.content}/></li>
-                </div>
-              )
+            playlist && playlist.all.map(item => (
+              <PlaylistItem key={item.hash} name={item.payload.value.meta.name} hash={item.payload.value.content}/>
+            )
           )}
           </ul>
       </div>

@@ -3,36 +3,54 @@ import Identities from 'orbit-db-identity-provider'
 import OrbitDB from 'orbit-db'
 
 class PlaylistsStore {
-  @observable playlists = []
-  @observable peers = []
   @observable isOnline = false
+  @observable playlists = []
 
   constructor() {
     this._ipfs = null
     this.odb = null
+    this.feed = null
   }
 
   async connect(ipfs, options = {}) {
     this._ipfs = ipfs
-    const { id } = await ipfs.id()
-    this.ipfsId = id
     const identity = options.identity || await Identities.createIdentity({ id: 'user' })
     this.odb = await OrbitDB.createInstance(ipfs, { identity, directory: './odb'})
-    await this.load()
-    console.log(this.playlists.all)
+    await this.loadPlaylists()
+    console.log(this.feed.all)
     this.isOnline = true
   }
 
-  async load(key = 'playlists') {
-    this.playlists = await this.odb.feed(this.odb.identity.id + 'playlists') //JSON.parse(localStorage.getItem(key)) || []
-    await this.playlists.load()
-  }
+  async loadPlaylists() {
+    this.feed = await this.odb.feed(this.odb.identity.id + '/playlists')
+    this.feed.events.on('write', (address, entry, heads) => {
+      console.log("added", entry)
+      switch (entry.payload.op) {
+        case 'ADD':
+          this.playlists.push({
+            hash: entry.hash,
+            name: entry.payload.value.name,
+            address: entry.payload.value.address
+          })
+          break
+        case 'DEL':
+          const filtered = this.playlists.filter(x => x.hash !== entry.payload.value)
+          this.playlists = filtered
+          break
+        default:
+          console.log("could not recognize op")
+      }
+    })
 
-  async deletePlaylist(hash) {
-    // const filtered = this.playlists.filter(x => x.name !== name)
-    // this.playlists = filtered
-    // this.save()
-    return this.playlists.del(hash)
+    await this.feed.load()
+
+    this.feed.all.map(entry => {
+      this.playlists.push({
+        hash: entry.hash,
+        name: entry.payload.value.name,
+        address: entry.payload.value.address
+      })
+    })
   }
 
   async createNewPlaylist(name) {
@@ -42,8 +60,8 @@ class PlaylistsStore {
       address: playlist.address.toString()
     }
 
-    this.playlists.add(p)
-    return name
+    const hash = await this.feed.add(p)
+    return hash
   }
 
   async joinPlaylist (address) {
@@ -51,6 +69,19 @@ class PlaylistsStore {
     const playlist = this.odb.stores[address] || await this.odb.open(address)
     await playlist.load()
     return playlist
+  }
+
+  async deletePlaylist(hash) {
+    await this.feed.del(hash)
+  }
+
+  async addToPlaylist (address, data) {
+    const feed = this.odb.stores[address] || await this.odb.open(address)
+    if (feed) {
+      const hash = await feed.add(data)
+      return feed.get(hash)
+    }
+    return
   }
 
   async addFile (address, source) {
@@ -85,15 +116,6 @@ class PlaylistsStore {
     return this.addToPlaylist(address, data)
 }
 
-  async addToPlaylist (address, data) {
-    const feed = this.odb.stores[address] || await this.odb.open(address)
-    if (feed) {
-      const hash = await feed.add(data)
-      return feed.get(hash)
-    }
-    return
-  }
-
   async _sendFile (file, address) {
     return new Promise(resolve => {
       const reader = new FileReader()
@@ -118,14 +140,14 @@ class PlaylistsStore {
     return Promise.all(promises)
   }
 
-  async sharePlaylist (address, peer) {
+  async sharePlaylist (address, peerId) {
     // add peer to ac
     // send message to peer
-    // if (!this.odb) return false
-    // const feed = this.odb.stores[address] || await this.odb.open(address)
-    // await feed.access.grant('write', peer)
-    // return true
+    if (!this.odb) return false
+    const feed = this.odb.stores[address] || await this.odb.open(address)
+    await feed.access.grant('write', peerId)
     console.log(address, peer)
+    return true
     // const channel = await Channel.open(this._ipfs, peer)
     // // Explicitly wait for peers to connect
     // console.log("Channel", channel)
