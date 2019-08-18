@@ -9,18 +9,21 @@ const PlaylitsItem =({ playlist, onClick }) => {
   return (
     <li>
       <Link to={`${playlist.address}`}>{playlist.name}</Link>
-      <div className="close" onClick={onClick}>delete</div>
+      <div className="close" onClick={onClick}>❌</div>
     </li>
   )
 }
 
 const Playlists = (props) =>
   props.store.isOnline ?
-    (<div>
+    (<div style={{ maxWidth: "800px" }}>
       <CreatePlaylist store={props.store} />
       <ul className="playlist-items"> {
         props.store.playlists.map(playlist => {
-          return (<PlaylitsItem key={playlist.address} playlist={playlist} onClick={() => props.store.deletePlaylist(playlist.hash)} />)
+          return (<PlaylitsItem
+            key={playlist.address}
+            playlist={playlist}
+            onClick={() => props.store.deletePlaylist(playlist.hash)} />)
         }
       )}
       </ul>

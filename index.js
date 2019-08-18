@@ -23,11 +23,16 @@ class App extends React.Component{
     }
 
     render(){
-        return(
+      return(
+        <div>
+          <pre>      .-``'.  📻                            📻  .'''-.</pre>
+          <pre>    .`   .`       ~ O R B I T   W A V E S ~      `.   '.</pre>
+          <pre>_.-'     '._ <a href="https://github.com/shamb0t/simple_workshop">github.com/shamb0t/simple_workshop</a> _.'     '-._</pre>
           <Router>
               <Route path="/orbitdb/:hash/:name" component={(props) => <Playlist {...props} store={store}/> }></Route>
               <Route exact path="/" component={(props) => <Playlists {...props} store={store}/> }/>
-          </Router>
+            </Router>
+          </div>
         )
     }
 }
