@@ -18,6 +18,7 @@ const CreatePlaylist = (props) => {
 
   return(
     <form onSubmit={handleSubmit}>
+      <label for="playlistName">Enter a playlist name:</label><br />
       <input type="text" placeholder="New playlist" onChange={handleChange} />
       <input type="submit" value="Create" />
     </form>

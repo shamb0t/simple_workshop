@@ -75,7 +75,7 @@ const Playlist = (props) => {
   return (
     <div className='Playlist'>
       <div className='header'>
-        <Link to={`/`}> Back </Link>
+        <Link to={`/`} title="Back to Home">..</Link>/&nbsp;
         <div id='title'>{props.match.params.name}</div>
       </div>
       {track ? (<PlayAudio className="plyr" ipfs={props.store._ipfs} hash={track}/>) : null}
@@ -91,7 +91,8 @@ const Playlist = (props) => {
               <PlaylistItem key={item.hash} name={item.payload.value.meta.name} hash={item.payload.value.content}/>
             )
           )}
-          </ul>
+        </ul>
+        <h2 className="message">Drag audio files here to add them to the playlist</h2>
       </div>
     </div>
   )

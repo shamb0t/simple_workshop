@@ -5,23 +5,53 @@ audio {
 }
 
 .playlist-item {
+  background: #F5F4EF;
   margin: 1em 1em;
   padding: 0.5em;
 }
+
+.playlist-items li {
+  height: 75px;
+  font-size: 24px;
+  line-height: 75px;
+  border-bottom: 3px solid darkslategray;
+  padding: 0.5rem;
+}
+.playlist-items li:nth-child(odd) {
+  padding: 0.5rem;
+  background-color: #f1f1f1;
+ }
 
 .Playlist {
   height: 500px;
 }
 
 .header {
+   font-size: 24px;
    display: flex;
-   margin: 1em 1em;
+   margin: 1em 0;
    .title {
      align-content: center;
    }
 }
 
 .dragZone {
+  position: relative;
   height: 100%;
   background-color: #ff9;
+}
+
+.dragZone .message {
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  display: none;
+}
+
+.dragZone:hover {
+  border: 3px dashed gray;
+}
+
+.dragZone:hover .message {
+  display: block;
 }
