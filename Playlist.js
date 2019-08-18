@@ -5,21 +5,53 @@ import ReactPlayer from 'react-player'
 import './styles/Playlist.scss'
 import { getDataTransferFiles, toArrayBuffer, getFileBuffer } from './helper'
 
+function createAudioElement(stream) {
+  const source = new MediaSource()
+
+  source.addEventListener('sourceopen', e => {
+    const buf = []
+    const sourceBuffer = source.sourceBuffers.length === 0 && source.addSourceBuffer('audio/mpeg')
+    if (sourceBuffer) {
+      sourceBuffer.addEventListener('updateend', () => {
+        if (buf.length > 0 && !sourceBuffer.updating) {
+          sourceBuffer.appendBuffer(buf.shift())
+        }
+      })
+
+      stream.on('data', data => {
+        if (!sourceBuffer.updating) {
+          if (buf.length > 0) {
+            sourceBuffer.appendBuffer(buf.shift())
+          } else {
+            sourceBuffer.appendBuffer(toArrayBuffer(data))
+          }
+        } else {
+          buf.push(toArrayBuffer(data))
+        }
+      })
+
+      stream.on('end', () => {
+        setTimeout(() => {
+          if (source.readyState === 'open' && !sourceBuffer.updating) source.endOfStream()
+        }, 100)
+      })
+
+      stream.on('error', e => console.error("herebeerror", e))
+    }
+  })
+
+  return <audio controls autoPlay={true} src={window.URL.createObjectURL(source)} onError={(e) => console.log("SOME ERROR", e)} />
+}
+
 const PlayAudio = ({ipfs, hash}) => {
   const [content, setContent] = useState(null)
   useEffect (() => {
-    getFileBuffer(ipfs, hash).then(buffer => {
-      let blob = new Blob([])
-      if (buffer instanceof Blob) {
-        blob = buffer
-      } else if (buffer) {
-        blob = new Blob([toArrayBuffer(buffer)], { type: 'audio/mpeg' })
-      }
-      setContent(<audio src={window.URL.createObjectURL(blob)} controls autoPlay={true} />)
-    })
+    const stream = ipfs.catReadableStream(hash)
+    const element = createAudioElement(stream)
+    setContent(element)
   }, [hash])
 
-  return content ? content : null
+  return content ? content : <div>Loading...</div>
 }
 
 const Playlist = (props) => {
@@ -42,10 +74,6 @@ const Playlist = (props) => {
       })
     }
     load()
-
-    if (playlist) {
-      playlist.events.on('replicate.progress', playlist.load())
-    }
 
     return () => {
       setPlaylist(null)
