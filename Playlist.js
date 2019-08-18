@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react"
-import { observer, Observer } from 'mobx-react'
+import { observer } from 'mobx-react'
 import { Link } from 'react-router-dom'
 import ReactPlayer from 'react-player'
 import './styles/Playlist.scss'
@@ -55,9 +55,8 @@ const PlayAudio = ({ipfs, hash}) => {
 }
 
 const Playlist = (props) => {
-  const [playlist, setPlaylist] = useState(null)
   const [track, setTrack] = useState(null)
-  // const [items, setItems] = useState([])
+  const [items, setItems] = useState([])
   const [dragActive, setDragActive] = useState(false)
 
   let mounted = true
@@ -67,16 +66,20 @@ const Playlist = (props) => {
 
   function handlePlaylistNameChange () {
     function load () {
-      props.store.joinPlaylist(address).then(playlist => {
+      props.store.joinPlaylist(address).then(() => {
         if (mounted) {
-          setPlaylist(playlist)
+          setItems(props.store.currentPlaylist.all)
+          props.store.currentPlaylist.events.on('replicated', () => {
+            console.log("REPLICATED")
+            setItems(props.store.currentPlaylist.all)
+          })
         }
       })
     }
     load()
 
     return () => {
-      setPlaylist(null)
+      setItems([])
       mounted = false
     }
   }
@@ -87,7 +90,7 @@ const Playlist = (props) => {
      const files = getDataTransferFiles(event)
      try {
        await store.sendFiles(files, address)
-       await playlist.load()
+       setItems(props.store.currentPlaylist.all)
      } catch (err) {
        console.log("ERROR", err)
        throw err
@@ -100,12 +103,18 @@ const Playlist = (props) => {
     )
   }
 
+  const Header = ({ title }) => {
+    return (
+      <div className='header'>
+        <Link to={`/`} title="Back to Home"> .. </Link>
+        <div id='title'>{title}</div>
+      </div>
+    )
+  }
+
   return (
     <div className='Playlist'>
-      <div className='header'>
-        <Link to={`/`} title="Back to Home">..</Link>/&nbsp;
-        <div id='title'>{props.match.params.name}</div>
-      </div>
+      <Header title={props.match.params.name} />
       {track ? (<PlayAudio className="plyr" ipfs={props.store._ipfs} hash={track}/>) : null}
       <div className='dragZone'
           onDragOver={event => {
@@ -115,7 +124,7 @@ const Playlist = (props) => {
           }
           onDrop={event => onDrop(event)}>
           <ul> {
-            playlist && playlist.all.map(item => (
+            items.map(item => (
               <PlaylistItem key={item.hash} name={item.payload.value.meta.name} hash={item.payload.value.content}/>
             )
           )}
@@ -126,13 +135,5 @@ const Playlist = (props) => {
   )
 }
 
-const PlaylistView = (props) => {
-  return (
-    <Observer>
-    {() =>
-      props.store.isOnline ? (<Playlist {...props} />) : null
-    }
-    </Observer>
-  )
-}
-export default PlaylistView
+const PlaylistView = (props) => props.store.isOnline ? (<Playlist {...props} />) : null
+export default observer(PlaylistView)

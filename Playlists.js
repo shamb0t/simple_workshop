@@ -2,7 +2,6 @@ import React from 'react'
 import { observer } from 'mobx-react'
 import { Link } from 'react-router-dom'
 import CreatePlaylist from './CreatePlaylist'
-import { Button, Popup } from 'semantic-ui-react';
 import './styles/Playlists.scss'
 
 const PlaylitsItem =({ playlist, onClick }) => {

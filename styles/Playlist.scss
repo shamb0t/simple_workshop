@@ -17,8 +17,8 @@ audio {
   border-bottom: 3px solid darkslategray;
   padding: 0.5rem;
 }
+
 .playlist-items li:nth-child(odd) {
-  padding: 0.5rem;
   background-color: #f1f1f1;
  }
 
@@ -30,15 +30,17 @@ audio {
    font-size: 24px;
    display: flex;
    margin: 1em 0;
-   .title {
+   #title {
+     margin: 0 1.5em;
      align-content: center;
    }
 }
 
 .dragZone {
+  padding-top: 0.1em;
   position: relative;
   height: 100%;
-  background-color: #ff9;
+  background-color: skyblue;
 }
 
 .dragZone .message {

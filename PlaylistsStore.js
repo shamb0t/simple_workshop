@@ -5,6 +5,7 @@ import OrbitDB from 'orbit-db'
 class PlaylistsStore {
   @observable isOnline = false
   @observable playlists = []
+  @observable currentPlaylist = {}
 
   constructor() {
     this._ipfs = null
@@ -65,10 +66,11 @@ class PlaylistsStore {
   }
 
   async joinPlaylist (address) {
-    if (!this.odb) return null
-    const playlist = this.odb.stores[address] || await this.odb.open(address)
-    await playlist.load()
-    return playlist
+    if (this.odb) {
+      const playlist = this.odb.stores[address] || await this.odb.open(address)
+      await playlist.load()
+      this.currentPlaylist = playlist
+    }
   }
 
   async deletePlaylist(hash) {
@@ -85,13 +87,11 @@ class PlaylistsStore {
   }
 
   async addFile (address, source) {
-    if (!source || (!source.filename && !source.directory)) {
-      throw new Error('Filename or directory not specified')
+    if (!source || !source.filename) {
+      throw new Error('Filename not specified')
     }
     const isBuffer = source.buffer && source.filename
-    const name = source.directory
-      ? source.directory.split('/').pop()
-      : source.filename.split('/').pop()
+    const name = source.filename.split('/').pop()
     const size = source.meta && source.meta.size ? source.meta.size : 0
 
     const result = await this._ipfs.add(Buffer.from(source.buffer))

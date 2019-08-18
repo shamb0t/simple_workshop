@@ -19,11 +19,13 @@ input[type=text] {
   border-radius: 5px;
   transition: all 0.6s ease;
 }
+
 input[type=text]:focus {
   outline: none;
   background: #fff;
   border-bottom: 3px solid darkcyan;
 }
+
 input.active {
   outline: none;
   background: #fff;
